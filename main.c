@@ -4,10 +4,11 @@
 static const char *edit_name(edit_t e)
 {
     switch (e) {
-        case ADD:    return "ADD";
-        case EDIT:   return "EDIT";
-        case DELETE: return "DELETE";
-        default:     return "?";
+        case ADD:       return "ADD";
+        case EDIT:      return "EDIT";
+        case DELETE:    return "DELETE";
+        case UNCHANGED: return "UNCHANGED";
+        default:        return "?";
     }
 }
 
@@ -19,6 +20,19 @@ void print_edits(const vec_line_edit_t *v)
         if (e->line)
             printf(" line=\"%s\"", e->line);
         printf("\n");
+    }
+}
+
+void
+print_regions(vec_region_t *region_vec)
+{
+    for (size_t i = 0; i < region_vec->size; i++)
+    {
+        region_t *region = &region_vec->data[i];
+
+        printf("===== REGION %zu =====\n", i);
+        print_edits(&region->edits);
+        printf("====================\n\n");
     }
 }
 
@@ -65,14 +79,21 @@ main (int argc, char **argv)
     print_file_contents (&base_file_contents);
     printf ("=== LOCAL CONTENTS ===\n");
     print_file_contents (&local_file_contents);
-    printf ("=== REMOTE CONTENTS ===\n");
-    print_file_contents (&remote_file_contents);
+//    printf ("=== REMOTE CONTENTS ===\n");
+//    print_file_contents (&remote_file_contents);
+//    printf ("===   ===\n");
 
     /* Diff files */
     vec_line_edit_t edits;
     vec_line_edit_init (&edits);
 
-    longest_continuous_sequence (&base_file_contents, &local_file_contents);
+    longest_continuous_sequence (&base_file_contents, &local_file_contents, &edits);
+
+    vec_region_t regions;
+    vec_region_init (&regions);
+
+    build_edit_groups (&edits, &regions);
+    print_regions (&regions);
 
     /* Free resources */
     free_file_contents (&base_file_contents);
